@@ -43,7 +43,10 @@
     "mime-types": "^2.1.17",
     "ngx-img": "^10.15.0",
     "rxjs": "5.5.2",
-    "zone.js": "^0.8.18"
+    "zone.js": "^0.8.18",
+    "text-mask-core":"^5.1.1",
+    "text-mask-addons":"^3.7.2",
+    "angular2-text-mask":"^9.0.0"
   },
   "devDependencies": {
     "@angular/cli": "1.7.0",

@@ -22,6 +22,8 @@ import { FeedbackService } from './feedback/feedback.service';
 import { ResourcesService } from './resources/resources.service';
 import { SubmissionsService } from './submissions/submissions.service';
 import { CoursesService } from './courses/courses.service';
+import { FormsModule } from '@angular/forms';
+import { TextMaskModule } from 'angular2-text-mask';
 
 @NgModule({
   imports: [
@@ -30,6 +32,8 @@ import { CoursesService } from './courses/courses.service';
     HttpClientModule,
     BrowserAnimationsModule,
     MaterialModule,
+    FormsModule,
+    TextMaskModule,
     NgxImgModule.forRoot(),
     environment.production
       ? ServiceWorkerModule.register('/ngsw-worker.js')

@@ -9,6 +9,7 @@ import { UsersUpdateComponent } from './users-update/users-update.component';
 import { UsersRouterModule } from './users-router.module';
 import { PlanetFormsModule } from '../shared/planet-forms.module';
 import { MaterialModule } from '../shared/material.module';
+import { TextMaskModule } from 'angular2-text-mask';
 
 @NgModule({
   imports: [
@@ -18,7 +19,8 @@ import { MaterialModule } from '../shared/material.module';
     FormsModule,
     ReactiveFormsModule,
     PlanetFormsModule,
-    MaterialModule
+    MaterialModule,
+    TextMaskModule
   ],
   declarations: [
     UsersComponent,

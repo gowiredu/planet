@@ -13,6 +13,7 @@ import { UserService } from '../../shared/user.service';
 import { environment } from '../../../environments/environment';
 import { NgxImgModule } from 'ngx-img';
 import { languages } from '../../shared/languages';
+import emailMask from 'text-mask-addons/dist/emailMask';
 
 @Component({
   templateUrl: './users-update.component.html',
@@ -45,6 +46,8 @@ export class UsersUpdateComponent implements OnInit {
   file: any;
   roles: string[] = [];
   languages = languages;
+  emailModel = '';
+  eMask = emailMask;
 
   constructor(
     private fb: FormBuilder,

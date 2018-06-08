@@ -3,8 +3,7 @@ import { UserService } from '../shared/user.service';
 import { CouchService } from '../shared/couchdb.service';
 import { findDocuments } from '../shared/mangoQueries';
 import { switchMap } from 'rxjs/operators';
-import { of } from 'rxjs/observable/of';
-import { forkJoin } from 'rxjs/observable/forkJoin';
+import { of, forkJoin } from 'rxjs';
 import { PlanetMessageService } from '../shared/planet-message.service';
 import { DialogsPromptComponent } from '../shared/dialogs/dialogs-prompt.component';
 import { MatDialog } from '@angular/material';
@@ -60,7 +59,9 @@ export class ManagerDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.checkRequestStatus();
+    if (this.planetType !== 'center') {
+      this.checkRequestStatus();
+    }
     this.isUserAdmin = this.userService.get().isUserAdmin;
     if (!this.isUserAdmin) {
       // A non-admin user cannot receive all user docs

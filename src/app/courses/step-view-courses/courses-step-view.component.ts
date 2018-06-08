@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CoursesService } from '../courses.service';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
-import { Subject } from 'rxjs/Subject';
+import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { UserService } from '../../shared/user.service';
 import { SubmissionsService } from '../../submissions/submissions.service';
@@ -54,7 +54,8 @@ export class CoursesStepViewComponent implements OnInit, OnDestroy {
           type: 'exam' });
       }
       this.resource = this.stepDetail.resources ? this.stepDetail.resources[0] : undefined;
-      this.submissionsService.submissionUpdated$.pipe(takeUntil(this.onDestroy$)).subscribe(({ submission, attempts, bestAttempt }) => {
+      this.submissionsService.submissionUpdated$.pipe(takeUntil(this.onDestroy$))
+      .subscribe(({ submission, attempts, bestAttempt = { grade: 0 } }) => {
         this.examStart = submission.answers.length + 1;
         this.attempts = attempts;
         const examPercent = (bestAttempt.grade / this.stepDetail.exam.totalMarks) * 100;

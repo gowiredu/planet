@@ -2,17 +2,14 @@ import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 
 import { UserService } from '../shared/user.service';
 import { CouchService } from '../shared/couchdb.service';
-import { forkJoin } from 'rxjs/observable/forkJoin';
+import { forkJoin, of, throwError, Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { MatTableDataSource, MatSort, MatPaginator, PageEvent, MatDialog } from '@angular/material';
 import { SelectionModel } from '@angular/cdk/collections';
 import { Router } from '@angular/router';
 import { PlanetMessageService } from '../shared/planet-message.service';
 import { switchMap, catchError, map, takeUntil } from 'rxjs/operators';
-import { filterSpecificFields } from '../shared/table-helpers';
-import { of } from 'rxjs/observable/of';
-import { _throw } from 'rxjs/observable/throw';
-import { Subject } from 'rxjs/Subject';
+import { filterSpecificFields, composeFilterFunctions, filterFieldExists } from '../shared/table-helpers';
 import { DialogsPromptComponent } from '../shared/dialogs/dialogs-prompt.component';
 import { findDocuments } from '../shared/mangoQueries';
 import { debug } from '../debug-operator';
@@ -32,6 +29,9 @@ export class UsersComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
   allUsers = new MatTableDataSource();
   message = '';
+  filterAssociated = false;
+  filter: any;
+  planetType = '';
   displayTable = true;
   displayedColumns = [ 'select', 'profile', 'name', 'roles', 'action' ];
   isUserAdmin = false;
@@ -56,9 +56,10 @@ export class UsersComponent implements OnInit, AfterViewInit {
       .subscribe((shelf: any) => {
         this.setMyTeams(this.allUsers.data, shelf.myTeamIds);
       });
-    }
+  }
 
   ngOnInit() {
+    this.planetType = this.userService.getConfig().planetType;
     this.isUserAdmin = this.userService.get().isUserAdmin;
     if (this.isUserAdmin || this.userService.get().roles.length) {
       this.initializeData();
@@ -68,8 +69,25 @@ export class UsersComponent implements OnInit, AfterViewInit {
     }
   }
 
+  changeFilter(type) {
+    switch (type) {
+      case 'associated':
+        this.displayedColumns = [ 'profile', 'name', 'action' ];
+        this.filterAssociated = true;
+        break;
+      default:
+        this.displayedColumns = [ 'select', 'profile', 'name', 'roles', 'action' ];
+        this.filterAssociated = false;
+        break;
+    }
+    this.filter = filterFieldExists([ 'doc.requestId' ], this.filterAssociated);
+    this.allUsers.filterPredicate = composeFilterFunctions([ this.filter, filterSpecificFields([ 'doc.name' ]) ]);
+    this.allUsers.filter = this.allUsers.filter || ' ';
+  }
+
   applyFilter(filterValue: string) {
     this.allUsers.filter = filterValue;
+    this.changeFilter(this.filterAssociated ? 'associated' : 'local');
   }
 
   ngAfterViewInit() {
@@ -95,13 +113,13 @@ export class UsersComponent implements OnInit, AfterViewInit {
   }
 
   getUsers() {
-    return this.couchService.post(this.dbName + '/_find', { 'selector': { } });
+    return this.couchService.post(this.dbName + '/_find', { 'selector': {} });
   }
 
   initializeData() {
     const currentLoginUser = this.userService.get().name;
     this.selection.clear();
-    this.getUsers().pipe(debug('Getting user list')).subscribe(users => {
+    this.getUsers().pipe(debug('Getting user list')).subscribe((users: any) => {
       users = users.docs.filter((user: any) => {
         // Removes current user from list.  Users should not be able to change their own roles,
         // so this protects from that.  May need to unhide in the future.
@@ -116,7 +134,7 @@ export class UsersComponent implements OnInit, AfterViewInit {
         return userInfo;
       });
       this.setMyTeams(users, this.userService.shelf.myTeamIds);
-      this.allUsers.filterPredicate = filterSpecificFields([ 'doc.name' ]);
+      this.changeFilter('local');
     }, (error) => {
       // A bit of a placeholder for error handling.  Request will return error if the logged in user is not an admin.
       console.log('Error initializing data!');
@@ -155,7 +173,7 @@ export class UsersComponent implements OnInit, AfterViewInit {
         catchError((err) => {
           // If deleting user fails, do not continue stream and show error
           this.planetMessageService.showAlert('There was a problem deleting this user.');
-          return _throw(err);
+          return throwError(err);
         }),
         switchMap((data) => {
           this.selection.deselect(user._id);

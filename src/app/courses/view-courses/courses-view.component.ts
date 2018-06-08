@@ -5,7 +5,7 @@ import { switchMap, takeUntil } from 'rxjs/operators';
 import { DatePipe } from '@angular/common';
 import { UserService } from '../../shared/user.service';
 import { CoursesService } from '../courses.service';
-import { Subject } from 'rxjs/Subject';
+import { Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SubmissionsService } from '../../submissions/submissions.service';
 
@@ -86,9 +86,9 @@ export class CoursesViewComponent implements OnInit, OnDestroy {
   }
 
   resourceUrl(stepDetail) {
-    if (Object.keys(stepDetail.attachment.doc._attachments)[0]) {
-      const filename = stepDetail.openWhichFile || Object.keys(stepDetail.attachment.doc._attachments)[0];
-      return environment.couchAddress + 'resources/' + stepDetail.attachment.doc._id + '/' + filename;
+    if (Object.keys(stepDetail.resources[0]._attachments)[0]) {
+      const filename = stepDetail.openWhichFile || Object.keys(stepDetail.resources[0]._attachments)[0];
+      return environment.couchAddress + 'resources/' + stepDetail.resources[0]._id + '/' + filename;
     }
   }
 

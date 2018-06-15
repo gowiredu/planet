@@ -16,6 +16,7 @@ import { CoursesStepViewComponent } from './step-view-courses/courses-step-view.
 import { ResourcesViewerComponent } from '../resources/view-resources/resources-viewer.component';
 import { ResourcesModule } from '../resources/resources.module';
 import { ExamsModule } from '../exams/exams.module';
+import { CoursesProgressLeaderComponent } from './progress-courses/courses-progress-leader.component';
 import { CoursesRatingComponent } from './rating-courses/courses-rating.component';
 
 @NgModule({
@@ -37,6 +38,7 @@ import { CoursesRatingComponent } from './rating-courses/courses-rating.componen
     CoursesViewComponent,
     CoursesStepComponent,
     CoursesStepViewComponent,
+    CoursesProgressLeaderComponent,
     CoursesRatingComponent
   ]
 })

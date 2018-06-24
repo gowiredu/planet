@@ -3,7 +3,7 @@ import { CouchService } from '../shared/couchdb.service';
 import { DialogsPromptComponent } from '../shared/dialogs/dialogs-prompt.component';
 import { MatTableDataSource, MatPaginator, MatSort, MatDialog, PageEvent } from '@angular/material';
 import { SelectionModel } from '@angular/cdk/collections';
-import { Router, ActivatedRoute, ParamMap } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -261,12 +261,10 @@ export class ResourcesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   fetchResource(resources) {
-    const syncData = {
-      dbName: this.dbName,
-      items: resources,
-      type: 'fetch'
-    };
-    this.syncService.openConfirmation(syncData);
+    this.syncService.confirmPasswordAndRunReplicators([ { db: this.dbName, items: resources, type: 'pull', date: true } ])
+    .subscribe((response: any) => {
+      this.planetMessageService.showMessage(resources.length + ' ' + this.dbName + ' ' + 'queued to fetch');
+    }, () => error => this.planetMessageService.showMessage(error));
   }
 
   onDropdownFilterChange(filterValue: string, field: string) {

@@ -22,6 +22,8 @@ import { FeedbackService } from './feedback/feedback.service';
 import { ResourcesService } from './resources/resources.service';
 import { SubmissionsService } from './submissions/submissions.service';
 import { CoursesService } from './courses/courses.service';
+import { SyncService } from './shared/sync.service';
+import { PlanetDialogsModule } from './shared/dialogs/planet-dialogs.module';
 import { TextMaskModule } from 'angular2-text-mask';
 
 @NgModule({
@@ -31,6 +33,7 @@ import { TextMaskModule } from 'angular2-text-mask';
     HttpClientModule,
     BrowserAnimationsModule,
     MaterialModule,
+    PlanetDialogsModule,
     TextMaskModule,
     NgxImgModule.forRoot(),
     environment.production
@@ -50,7 +53,8 @@ import { TextMaskModule } from 'angular2-text-mask';
     FeedbackService,
     ResourcesService,
     SubmissionsService,
-    CoursesService
+    CoursesService,
+    SyncService
   ],
   bootstrap: [ AppComponent ]
 })

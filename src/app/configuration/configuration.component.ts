@@ -217,43 +217,8 @@ export class ConfigurationComponent implements OnInit {
         'joinDate': Date.now(),
         ...this.contactFormGroup.value
       };
-      const feedbackSyncUp = this.getFeedbackSyncUp(configuration, credentials, adminName);
-      const feedbackSyncDown = this.getFeedbackSyncDown(feedbackSyncUp, configuration);
-
-      this.createReplicator(feedbackSyncUp, feedbackSyncDown, credentials, configuration, adminName, userDetail);
+      this.createReplicator(credentials, configuration, adminName, userDetail);
     }
-  }
-
-  getFeedbackSyncUp(configuration, credentials, adminName) {
-    return {
-      '_id': 'feedback_to_parent',
-      'source': {
-        'headers': {
-          'Authorization': 'Basic ' + btoa(credentials.name + ':' + credentials.password)
-        },
-        'url': environment.couchAddress + 'feedback'
-      },
-      'target': {
-        'headers': {
-          'Authorization': 'Basic ' + btoa(adminName + ':' + credentials.password)
-        },
-        'url': 'https://' + configuration.parentDomain + '/feedback'
-      },
-      'create_target': false,
-      'continuous': true,
-      'owner': credentials.name
-    };
-  }
-
-  getFeedbackSyncDown(feedbackSyncUp, configuration) {
-    return Object.assign({}, feedbackSyncUp, {
-      '_id': 'feedback_from_parent',
-      'source': feedbackSyncUp.target,
-      'target': feedbackSyncUp.source,
-      'selector': {
-        'source': configuration.code
-      }
-    });
   }
 
   createRequestNotification(configuration) {
@@ -295,37 +260,31 @@ export class ConfigurationComponent implements OnInit {
     });
   }
 
-  createReplicator(feedbackSyncUp, feedbackSyncDown, credentials, configuration, adminName, userDetail) {
-    // create replicator at first as we do not have session
-    this.couchService.post('_replicator', feedbackSyncUp)
-      .pipe(
-        debug('Creating replicator'),
-        switchMap(res => {
-          return this.couchService.post('_replicator', feedbackSyncDown);
-        }),
-        debug('Sending request to parent planet'),
-        switchMap(res => {
-          return forkJoin([
-            // When creating a planet, add admin
-            this.couchService.put('_node/nonode@nohost/_config/admins/' + credentials.name, credentials.password),
-            // then add user with same credentials
-            this.couchService.put('_users/org.couchdb.user:' + credentials.name, userDetail),
-            // then add a shelf for that user
-            this.couchService.put('shelf/org.couchdb.user:' + credentials.name, {}),
-            // then add configuration
-            this.couchService.post('configurations', configuration),
-            // then post configuration to parent planet's registration requests
-            this.couchService.post('communityregistrationrequests', configuration, {
-              domain: configuration.parentDomain
-            })
-            .pipe(this.addUserToParentPlanet(userDetail, adminName, configuration),
-              this.addUserToShelf(adminName, configuration),
-              this.createRequestNotification(configuration)
-            )
-          ]);
-        })
-      ).subscribe((data) => {
-        this.planetMessageService.showMessage('Admin created: ' + data[1].id.replace('org.couchdb.user:', ''));
+  createReplicator(credentials, configuration, adminName, userDetail) {
+    // create configuration
+    this.couchService.post('configurations', configuration).pipe(
+      // create replicator for configuraiton at first as we do not have session
+      switchMap(conf => {
+        return forkJoin([
+          // When creating a planet, add admin
+          this.couchService.put('_node/nonode@nohost/_config/admins/' + credentials.name, credentials.password),
+          // then add user with same credentials
+          this.couchService.put('_users/org.couchdb.user:' + credentials.name, userDetail),
+          // then add a shelf for that user
+          this.couchService.put('shelf/org.couchdb.user:' + credentials.name, {}),
+          // then post configuration to parent planet's registration requests
+          this.couchService.post('communityregistrationrequests', { ...configuration, _id: conf.id }, {
+            domain: configuration.parentDomain
+          }).pipe(
+            this.addUserToParentPlanet(userDetail, adminName, configuration),
+            this.addUserToShelf(adminName, configuration),
+            this.createRequestNotification(configuration)
+          )
+        ]);
+      })
+    )
+    .subscribe((data) => {
+        this.planetMessageService.showMessage('Admin created: ' + credentials.name);
         this.router.navigate([ '/login' ]);
       }, (error) => this.planetMessageService.showAlert('There was an error creating planet'));
   }
